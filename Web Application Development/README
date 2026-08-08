@@ -1,0 +1,46 @@
+# 🏭 TRACK-PRO: Manufacturing QC & Production Tracking System
+
+**TRACK-PRO** คือระบบติดตามสถานะการผลิต ควบคุมคุณภาพ (Quality Control) และติดตามโลจิสติกส์แบบ Real-time สำหรับอุตสาหกรรมแม่พิมพ์และชิ้นส่วนหล่อฉีด (Die-Casting) พัฒนาด้วยสถาปัตยกรรม Microservices บน Docker Container
+
+---
+
+## 🌟 ฟีเจอร์หลักของระบบ (Key Features)
+
+* **📊 Real-time Dashboard:** แสดงผลยอดการผลิต (Shot Count), Yield Rate, เปอร์เซ็นต์ความคืบหน้า และสถานะเครื่องจักร
+* **⚡ Live Data Entry:** ฟอร์มบันทึกยอดการหล่อเพิ่มหน้างาน พร้อมอัปเดตหลอด Progress Bar ทันที
+* **🛠️ Edge Case Simulation:** ระบบจำลองสถานการณ์วิกฤต เช่น เครื่องจักรขัดข้อง (Breakdown), เน็ตหลุด หรือเกิดของเสีย (IoT Loss)
+* **📋 Concession & Quality Control:** ระบบบันทึกการตัดสินใจกรณีชิ้นส่วนมี Defect (การส่ง Rework / ยอมรับเงื่อนไข Concession)
+* **🔍 Post-Processing & Tracking:** ติดตามสถานะชิ้นงานในขั้นตอนหลังการหล่อ (Trimming, CNC, Polishing)
+* **🚚 Logistics Tracking:** ติดตามพิกัดและสถานะการจัดส่งสินค้าไปยังลูกค้า
+
+---
+
+## 🛠️ Tech Stack & Technologies
+
+| ส่วนประกอบ (Component) | เทคโนโลยีที่ใช้ (Technology) |
+| :--- | :--- |
+| **Backend API** | Python 3.11, FastAPI, Uvicorn, Pydantic |
+| **Frontend UI** | HTML5, Tailwind CSS, JavaScript (ES6 Fetch API) |
+| **Web Server** | Nginx (Alpine Linux) |
+| **Containerization** | Docker, Docker Compose |
+
+---
+
+## 📁 โครงสร้างโปรเจกต์ (Project Structure)
+
+```text
+Web Application Development/
+├── backend/                  # ส่วนงานประมวลผลเซิร์ฟเวอร์ (FastAPI)
+│   ├── main.py               # API Endpoints, Mock Data & Business Logic
+│   ├── requirements.txt      # รายการ Python Packages
+│   └── Dockerfile            # สเปก Container สำหรับ Backend
+│
+├── frontend/                 # ส่วนแสดงผลผู้ใช้งาน (Nginx)
+│   ├── login.html            # หน้าเข้าสู่ระบบตามบทบาทผู้ใช้
+│   ├── index.html            # หน้า Dashboard หลักและการคีย์ข้อมูล
+│   ├── tracking.html         # หน้าสแกนติดตามสถานะ Post-Processing
+│   ├── qc-report.html        # หน้าแสดงเอกสารรายงานผลตรวจ QC
+│   └── Dockerfile            # สเปก Container สำหรับ Frontend
+│
+├── docker-compose.yml        # ไฟล์รวมคำสั่งรันระบบทั้งหมดด้วย Docker
+└── README.md                 # เอกสารอธิบายการใช้งานโปรเจกต์
