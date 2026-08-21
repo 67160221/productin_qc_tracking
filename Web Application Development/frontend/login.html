@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - QC & Production Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --brass-500:#DFD187;
+            --brass-600:#D6985C;
+            --ink-900:#434041;
+            --ink-500:#69747C;
+            --paper-200:#E4E9ED;
+            --panel-dark:#434041;
+            --steel-300:#E4E9ED;
+            --steel-400:#8B96A1;
+        }
+        body{ font-family:'Itim', sans-serif; background:#EEF1F3; }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .brass-gradient{ background:linear-gradient(135deg, var(--brass-500), var(--brass-600)); }
+
+        /* scalloped edge: a repeating half-circle strip glued to the panel's right side */
+        .scallop{
+            --r: 20px;
+            position:absolute;
+            top:0; bottom:0; right:100%;
+            width: var(--r);
+            background:
+                radial-gradient(circle at 100 var(--r), var(--panel-dark) var(--r), transparent calc(var(--r) + 0.5px))
+                repeat-y;
+            background-size: 100% calc(var(--r) * 2);
+            background-position: 0 calc(var(--r) * -1);
+        }
+
+        .field-underline{
+            border:none; border-bottom:1.5px solid var(--paper-200);
+            background:transparent; border-radius:0; padding:0.5rem 0;
+        }
+        .field-underline:focus{ outline:none; border-bottom-color:var(--brass-500); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 md:p-10">
+
+    <div class="w-full max-w-4xl bg-white rounded-[32px] shadow-[0_30px_60px_-20px_rgba(35,42,48,0.25)] overflow-hidden grid grid-cols-1 md:grid-cols-2 min-h-[560px]">
+
+        <!-- ================= LEFT: WELCOME PANEL ================= -->
+        <div class="relative hidden md:flex flex-col justify-between p-10" style="background:var(--panel-dark);">
+            <div class="scallop"></div>
+
+            <div>
+                <p class="font-mono text-[10px] tracking-[0.14em] uppercase" style="color:var(--steel-400)">Welcome to</p>
+                <p class="font-display font-semibold text-2xl mt-1" style="color:#fff">TRACK&#8209;PRO</p>
+            </div>
+
+            <div class="flex flex-col items-center text-center gap-5 -mt-8">
+                <div class="w-20 h-20 rounded-full flex items-center justify-center brass-gradient shrink-0">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="1.8"/></svg>
+                </div>
+                <p class="text-sm leading-relaxed max-w-[240px]" style="color:var(--steel-300)">
+                    ระบบเชื่อมโยงข้อมูลระหว่างลูกค้าและโรงงาน เพื่อติดตามงานผลิตและมาตรฐาน QC ได้ตลอด 24 ชั่วโมง
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full" style="background:var(--brass-500);"></span>
+                <p class="font-mono text-[10px] tracking-[0.12em] uppercase" style="color:var(--steel-400)">Die&#8209;Casting QC Platform</p>
+            </div>
+        </div>
+
+        <!-- ================= RIGHT: LOGIN FORM ================= -->
+        <div class="flex flex-col justify-center p-8 md:p-12">
+
+            <h1 class="font-display font-semibold text-2xl mb-1" style="color:var(--ink-900)">เข้าสู่ระบบ</h1>
+            <p class="text-sm mb-7" style="color:var(--ink-500)">กรอกข้อมูลเพื่อเข้าใช้งานระบบติดตามการผลิต</p>
+
+            <form id="loginForm" class="space-y-5">
+
+                <div>
+                    <label class="font-mono text-[10px] font-medium tracking-[0.1em] uppercase block mb-2" style="color:var(--ink-500)">บทบาทผู้ใช้งาน</label>
+                    <div class="grid grid-cols-2 gap-1.5 p-1 rounded-lg" style="background:#F4F1EC;">
+                        <button type="button" id="roleClient" onclick="setRole('client')"
+                            class="brass-gradient font-medium py-2 px-3 rounded-md text-xs transition" style="color:#FFFFFF;">
+                            ลูกค้า / ผู้จัดซื้อ
+                        </button>
+                        <button type="button" id="roleManager" onclick="setRole('manager')"
+                            class="font-medium py-2 px-3 rounded-md text-xs transition" style="color:var(--ink-500);">
+                            ผู้จัดการโรงงาน
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="username" class="text-xs font-medium block mb-1" style="color:var(--ink-900)">ชื่อผู้ใช้ หรือ อีเมล</label>
+                    <input type="text" id="username" required placeholder="เช่น info@company.com"
+                           class="field-underline w-full text-sm">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="password" class="text-xs font-medium" style="color:var(--ink-900)">รหัสผ่าน</label>
+                        <a href="#" onclick="alert('กรุณาติดต่อเจ้าหน้าที่ดูแลระบบ (Admin) ประจำโรงงานเพื่อรีเซ็ตรหัสผ่าน')"
+                           class="text-[11px] hover:underline" style="color:var(--brass-600)">ลืมรหัสผ่าน?</a>
+                    </div>
+                    <input type="password" id="password" required placeholder="••••••••"
+                           class="field-underline w-full text-sm">
+                </div>
+
+                <label class="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                    <input type="checkbox" id="remember" class="w-4 h-4 rounded" style="accent-color:var(--brass-500);">
+                    <span class="text-xs" style="color:var(--ink-500)">จดจำการเข้าสู่ระบบบนอุปกรณ์นี้</span>
+                </label>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="submit"
+                            class="flex-1 brass-gradient font-medium py-2.5 rounded-full text-sm transition hover:brightness-105 active:brightness-95"
+                            style="color:#FFFFFF;">
+                        เข้าสู่ระบบ
+                    </button>
+                    <button type="button" onclick="alert('กรุณาติดต่อเจ้าหน้าที่ไอทีประจำโรงงานเพื่อขอบัญชีผู้ใช้งาน')"
+                            class="flex-1 font-medium py-2.5 rounded-full text-sm border transition hover:bg-gray-50"
+                            style="color:var(--ink-900); border-color:var(--paper-200);">
+                        ขอสิทธิ์เข้าใช้งาน
+                    </button>
+                </div>
+            </form>
+
+            <div class="flex items-center gap-2 mt-7 pt-5 border-t" style="border-color:var(--paper-200);">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="shrink-0"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" stroke="var(--ink-500)" stroke-width="1.5"/></svg>
+                <p class="text-[11px]" style="color:var(--ink-500)">เชื่อมต่อมาตรฐานความปลอดภัยข้อมูลโรงงานและ IoT Cloud</p>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    let currentRole = 'client';
+
+    function setRole(role) {
+        currentRole = role;
+        const btnClient = document.getElementById('roleClient');
+        const btnManager = document.getElementById('roleManager');
+        const active = "brass-gradient font-medium py-2 px-3 rounded-md text-xs transition";
+        const inactive = "font-medium py-2 px-3 rounded-md text-xs transition";
+
+        if (role === 'client') {
+            btnClient.className = active; btnClient.style.color = "#FFFFFF";
+            btnManager.className = inactive; btnManager.style.color = "var(--ink-500)";
+        } else {
+            btnManager.className = active; btnManager.style.color = "#FFFFFF";
+            btnClient.className = inactive; btnClient.style.color = "var(--ink-500)";
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: currentRole, username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('userRole', data.role);
+                alert(`ยินดีต้อนรับ! เข้าสู่ระบบสำเร็จในฐานะ [${data.role === 'client' ? 'ลูกค้า/ผู้จัดซื้อ' : 'ผู้จัดการโรงงาน'}]`);
+                window.location.href = 'dashboard.html';
+            } else {
+                alert("เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจสอบข้อมูล");
+            }
+        } catch (err) {
+            console.error("API Error:", err);
+            alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้");
+        }
+    }
+</script>
+</body>
+</html>

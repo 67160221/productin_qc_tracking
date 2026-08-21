@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Processing Status (แผนกหลังการหล่อ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { font-family: 'Sarabun', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <nav class="bg-gray-800 border-b border-gray-700 p-4">
+        <div class="max-w-2xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-sm text-gray-400 hover:text-white">⬅️ ย้อนกลับไปแดชบอร์ดหลัก</a>
+            <span class="font-bold text-sm text-orange-400">Step 4: Post-Processing</span>
+        </div>
+    </nav>
+
+    <main class="max-w-2xl mx-auto p-4 md:p-6 mt-4">
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+            <h2 class="text-lg font-bold mb-1 text-gray-100">สถานะขั้นตอนหลังการหล่อ (Post-Processing)</h2>
+            <p class="text-xs text-gray-400 mb-6">ระบบเปลี่ยนสถานะอัตโนมัติจากการสแกนบาร์โค้ดแต่ละแผนก</p>
+
+            <div id="stepperContainer" class="relative pl-6 space-y-8 before:absolute before:bottom-2 before:top-2 before:left-2 before:w-0.5 before:bg-gray-700">
+                <!-- Data rendered dynamically from API -->
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-gray-700 flex justify-end">
+                <a href="qc-report.html" class="bg-orange-500 text-gray-900 font-bold px-5 py-2.5 rounded text-sm hover:bg-orange-400 transition shadow">
+                    ถัดไป: ไปยังศูนย์เอกสาร QC รายงานผล ➡️
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function fetchTrackingData() {
+            try {
+                const res = await fetch('/api/v1/jobs/Z-2046/post-processing');
+                const data = await res.json();
+                
+                const container = document.getElementById('stepperContainer');
+                container.innerHTML = '';
+
+                data.steps.forEach(step => {
+                    let badge = '';
+                    let titleColor = '';
+
+                    if(step.status === 'completed') {
+                        badge = `<div class="absolute -left-6 bg-green-500 text-gray-900 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">✓</div>`;
+                        titleColor = 'text-green-400';
+                    } else if(step.status === 'in_progress') {
+                        badge = `<div class="absolute -left-6 bg-yellow-500 text-gray-900 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">●</div>`;
+                        titleColor = 'text-yellow-400';
+                    } else {
+                        badge = `<div class="absolute -left-6 bg-gray-700 text-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">${step.step_no}</div>`;
+                        titleColor = 'text-gray-500';
+                    }
+
+                    container.innerHTML += `
+                        <div class="relative">
+                            ${badge}
+                            <div class="pl-2">
+                                <h4 class="text-sm font-bold ${titleColor}">${step.name}</h4>
+                                <p class="text-xs text-gray-400">${step.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Tracking Fetch Error:", err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchTrackingData);
+    </script>
+</body>
+</html>
