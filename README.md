@@ -1,0 +1,258 @@
+<div align="center">
+
+# ⚡ TRACK-PRO
+
+### QC & Production Tracking System
+
+ระบบติดตามงานผลิตและมาตรฐาน QC สำหรับโรงงาน Die-Casting
+เชื่อมโยงข้อมูลระหว่าง **ลูกค้า/ผู้จัดซื้อ** และ **ผู้จัดการโรงงาน** แบบเรียลไทม์
+
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+
+</div>
+
+---
+
+## 📖 สารบัญ
+
+- [ภาพรวมระบบ](#-ภาพรวมระบบ)
+- [สถาปัตยกรรม](#-สถาปัตยกรรม)
+- [โครงสร้างโปรเจกต์](#-โครงสร้างโปรเจกต์)
+- [เริ่มต้นใช้งาน](#-เริ่มต้นใช้งาน)
+- [บัญชีผู้ใช้ทดสอบ](#-บัญชีผู้ใช้ทดสอบ)
+- [หน้าจอการใช้งาน](#-หน้าจอการใช้งาน)
+- [API Reference](#-api-reference)
+- [ตัวแปรแวดล้อม](#-ตัวแปรแวดล้อม)
+- [การพัฒนา](#-การพัฒนา)
+
+---
+
+## 🎯 ภาพรวมระบบ
+
+TRACK-PRO คือระบบติดตามสถานะงานผลิตชิ้นงาน **Die-Casting** ตั้งแต่ต้นจนจบกระบวนการ ประกอบด้วย:
+
+| โมดูล | รายละเอียด |
+|---|---|
+| 🔐 **Authentication** | เข้าสู่ระบบแยกตามบทบาท (ลูกค้า / ผู้จัดการโรงงาน) |
+| 📊 **Dashboard** | ติดตามความคืบหน้าการฉีดขึ้นรูป, Yield Rate และสถานะ IoT แบบเรียลไทม์ |
+| 🔧 **Post-Processing** | ติดตามขั้นตอนหลังการหล่อ (CNC, ตรวจสอบมิติ, เคลือบผิว) |
+| 📄 **QC Report** | รายงานผลตรวจสอบคุณภาพและมาตรฐานการสุ่มตัวอย่าง |
+| 🚚 **Logistics** | ติดตามสถานะการจัดส่งและตำแหน่ง GPS ของพาหนะ |
+| 🎛️ **Edge Case Simulator** | จำลองสถานการณ์ผิดปกติ (เน็ตหลุด, เครื่องพัง, ของเสียวิกฤต) |
+
+---
+
+## 🏗️ สถาปัตยกรรม
+
+```
+┌─────────────────┐        ┌──────────────────┐        ┌─────────────────┐
+│   Nginx          │  /api  │   FastAPI          │        │   PostgreSQL      │
+│   (Frontend)      │───────▶│   (Backend)         │───────▶│   (Database)       │
+│   Port: 8080      │        │   Port: 8000        │        │   Port: 5432       │
+└─────────────────┘        └──────────────────┘        └─────────────────┘
+   login.html                  main.py                    job_orders
+   dashboard.html               models.py                  users
+   tracking.html                schemas.py                 post_processing_steps
+   qc-report.html               database.py                qc_reports / items
+                                                             logistics
+```
+
+- **Frontend**: ไฟล์ HTML + Tailwind CSS (CDN) เสิร์ฟผ่าน Nginx และ proxy คำขอ `/api/*` ไปยัง Backend
+- **Backend**: FastAPI + SQLAlchemy ORM เชื่อมต่อ PostgreSQL จริง พร้อมระบบ seed ข้อมูลตัวอย่างอัตโนมัติ
+- **Database**: PostgreSQL พร้อม volume สำหรับเก็บข้อมูลถาวร (persistent)
+
+---
+
+## 📂 โครงสร้างโปรเจกต์
+
+```
+Webapp/
+├── backend/
+│   ├── main.py            # FastAPI app, endpoints, seed data, lifespan events
+│   ├── models.py          # SQLAlchemy models (User, JobOrder, QCReport ฯลฯ)
+│   ├── schemas.py         # Pydantic request/response schemas
+│   ├── database.py        # การเชื่อมต่อฐานข้อมูลและ session
+│   ├── requirements.txt   # Python dependencies
+│   └── Dockerfile
+├── frontend/
+│   ├── login.html          # หน้าเข้าสู่ระบบ
+│   ├── dashboard.html      # แดชบอร์ดหลัก + Edge Case Simulator
+│   ├── tracking.html       # ติดตามขั้นตอนหลังการหล่อ
+│   ├── qc-report.html      # รายงาน QC และข้อมูลจัดส่ง
+│   ├── default.conf        # Nginx config (reverse proxy /api)
+│   └── Dockerfile
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## 🚀 เริ่มต้นใช้งาน
+
+### สิ่งที่ต้องมี
+
+- [Docker](https://www.docker.com/) และ [Docker Compose](https://docs.docker.com/compose/)
+
+### ขั้นตอนการรัน
+
+```bash
+# 1) เข้าไปในโฟลเดอร์โปรเจกต์
+cd Webapp
+
+# 2) สั่งรันทั้งระบบ (Database + Backend + Frontend)
+docker compose up --build
+
+# 3) เปิดเบราว์เซอร์ไปที่
+http://localhost:8080
+```
+
+> ระบบจะสร้างตารางฐานข้อมูลและ **เติมข้อมูลตัวอย่างให้อัตโนมัติ** (Job Order `Z-2046` พร้อมข้อมูล QC และ Logistics) ในการรันครั้งแรก — ใช้งานได้ทันทีโดยไม่ต้อง seed เอง
+
+### ตรวจสอบว่าระบบเชื่อมต่อฐานข้อมูลสำเร็จ
+
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
+```json
+{ "status": "ok", "database": "connected", "job_orders": 1 }
+```
+
+### หยุดการทำงาน
+
+```bash
+docker compose down          # หยุดและลบ container
+docker compose down -v       # หยุดและลบข้อมูลใน volume ด้วย
+```
+
+---
+
+## 🔑 บัญชีผู้ใช้ทดสอบ
+
+ระบบสร้างบัญชีตัวอย่างไว้ให้ในฐานข้อมูลตั้งแต่เริ่มรันครั้งแรก:
+
+| บทบาท | Username | Password |
+|---|---|---|
+| 👤 ลูกค้า / ผู้จัดซื้อ | `client@trackpro.co` | `client1234` |
+| 🏭 ผู้จัดการโรงงาน | `manager@trackpro.co` | `manager1234` |
+
+> รหัสผ่านถูกจัดเก็บแบบ hash (bcrypt) ในฐานข้อมูล ไม่ใช่ plain text
+
+---
+
+## 🖥️ หน้าจอการใช้งาน
+
+| หน้า | ไฟล์ | คำอธิบาย |
+|---|---|---|
+| เข้าสู่ระบบ | `login.html` | เลือกบทบาทและกรอกข้อมูลรับ Token |
+| แดชบอร์ดหลัก | `dashboard.html` | Timeline, Shot Count, Yield Rate, สถานะ Defect |
+| ขั้นตอนหลังการหล่อ | `tracking.html` | Stepper แสดงความคืบหน้า 4 ขั้นตอน |
+| รายงาน QC & จัดส่ง | `qc-report.html` | เอกสาร QC ดิจิทัล + สถานะโลจิสติกส์ |
+
+---
+
+## 🔌 API Reference
+
+Base URL: `http://localhost:8000/api/v1`  |  Interactive Docs: `http://localhost:8000/docs`
+
+### Authentication
+
+| Method | Endpoint | คำอธิบาย |
+|---|---|---|
+| `POST` | `/auth/login` | เข้าสู่ระบบด้วย username/password/role |
+
+### Job Orders
+
+| Method | Endpoint | คำอธิบาย |
+|---|---|---|
+| `GET` | `/jobs/{job_id}/dashboard` | ข้อมูลแดชบอร์ดของ Job Order |
+| `POST` | `/jobs/{job_id}/edge-case` | จำลองสถานการณ์ (`normal`, `iot_loss`, `breakdown`) |
+| `POST` | `/jobs/{job_id}/concession` | บันทึกการตัดสินใจกรณีพบของเสีย |
+| `POST` | `/jobs` | สร้าง Job Order ใหม่ |
+
+### Post-Processing
+
+| Method | Endpoint | คำอธิบาย |
+|---|---|---|
+| `GET` | `/jobs/{job_id}/post-processing` | รายการขั้นตอนหลังการหล่อ |
+
+### QC & Logistics
+
+| Method | Endpoint | คำอธิบาย |
+|---|---|---|
+| `GET` | `/jobs/{job_id}/qc-report` | รายงานผลตรวจสอบคุณภาพ |
+| `GET` | `/jobs/{job_id}/logistics` | ข้อมูลการจัดส่งและ GPS |
+
+### System
+
+| Method | Endpoint | คำอธิบาย |
+|---|---|---|
+| `GET` | `/health` | ตรวจสอบสถานะการเชื่อมต่อฐานข้อมูล |
+
+<details>
+<summary><b>ตัวอย่าง Request/Response — POST /auth/login</b></summary>
+
+**Request**
+```json
+{
+  "role": "manager",
+  "username": "manager@trackpro.co",
+  "password": "manager1234"
+}
+```
+
+**Response**
+```json
+{
+  "access_token": "trackpro-9f3a1c...",
+  "token_type": "bearer",
+  "role": "manager"
+}
+```
+</details>
+
+---
+
+## ⚙️ ตัวแปรแวดล้อม
+
+กำหนดค่าใน `docker-compose.yml` (แก้ไขได้ตามต้องการ):
+
+| ตัวแปร | Service | ค่าเริ่มต้น | คำอธิบาย |
+|---|---|---|---|
+| `POSTGRES_USER` | db | `postgres` | ผู้ใช้ฐานข้อมูล |
+| `POSTGRES_PASSWORD` | db | `mypassword` | รหัสผ่านฐานข้อมูล |
+| `POSTGRES_DB` | db | `trackpro_db` | ชื่อฐานข้อมูล |
+| `DATABASE_URL` | backend | `postgresql://postgres:mypassword@db:5432/trackpro_db` | Connection string ของ Backend |
+
+> ⚠️ สำหรับการใช้งานจริง (Production) ควรเปลี่ยนรหัสผ่านฐานข้อมูลและบัญชีทดสอบทั้งหมด
+
+---
+
+## 🛠️ การพัฒนา
+
+### รัน Backend แยกเพื่อพัฒนา (Hot Reload)
+
+```bash
+cd backend
+pip install -r requirements.txt
+export DATABASE_URL="postgresql://postgres:mypassword@localhost:5432/trackpro_db"
+uvicorn main:app --reload --port 8000
+```
+
+### เทคโนโลยีที่ใช้
+
+- **Backend**: FastAPI · SQLAlchemy · Pydantic v2 · Passlib (bcrypt)
+- **Frontend**: HTML5 · Tailwind CSS · Vanilla JavaScript (Fetch API)
+- **Database**: PostgreSQL 15
+- **Infrastructure**: Docker Compose · Nginx (reverse proxy)
+
+---
+
+<div align="center">
+
+Made with ⚡ for **Die-Casting QC Platform**
+
+</div>
