@@ -5,41 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post-Processing Status (แผนกหลังการหล่อ)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: 'Sarabun', sans-serif; }</style>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --brass-500:#DFD187;
+            --brass-600:#D6985C;
+            --ink-900:#434041;
+            --ink-500:#69747C;
+            --paper-200:#E4E9ED;
+            --steel-400:#8B96A1;
+        }
+        body{ font-family:'Itim', sans-serif; background:#EEF1F3; }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .brass-gradient{ background:linear-gradient(135deg, var(--brass-500), var(--brass-600)); }
+        .card{ background:#fff; border-radius:20px; box-shadow:0 20px 40px -24px rgba(35,42,48,0.18); }
+        .nav-pill{ padding:.5rem .9rem; border-radius:9999px; font-size:.75rem; font-weight:500; transition:.15s; }
+        .nav-pill-active{ color:#fff; }
+        .nav-pill-inactive{ color:var(--ink-500); }
+        .nav-pill-inactive:hover{ background:var(--paper-200); }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 p-4">
-        <div class="max-w-2xl mx-auto flex justify-between items-center">
-            <a href="index.html" class="text-sm text-gray-400 hover:text-white">⬅️ ย้อนกลับไปแดชบอร์ดหลัก</a>
-            <span class="font-bold text-sm text-orange-400">Step 4: Post-Processing</span>
+    <!-- ================= SHARED NAV ================= -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b" style="border-color:var(--paper-200);">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6 py-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg brass-gradient flex items-center justify-center shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="2"/></svg>
+                </div>
+                <span class="font-display font-semibold text-sm" style="color:var(--ink-900)">TRACK&#8209;PRO</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <a href="dashboard.html" class="nav-pill nav-pill-inactive">แดชบอร์ด</a>
+                <span class="nav-pill nav-pill-active brass-gradient">Post&#8209;Processing</span>
+                <a href="qc-report.html" class="nav-pill nav-pill-inactive">QC Report</a>
+                <button onclick="logout()" class="nav-pill border" style="color:var(--ink-500); border-color:var(--paper-200);">ออกจากระบบ</button>
+            </div>
         </div>
     </nav>
 
     <main class="max-w-2xl mx-auto p-4 md:p-6 mt-4">
-        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
-            <h2 class="text-lg font-bold mb-1 text-gray-100">สถานะขั้นตอนหลังการหล่อ (Post-Processing)</h2>
-            <p class="text-xs text-gray-400 mb-6">ระบบเปลี่ยนสถานะอัตโนมัติจากการสแกนบาร์โค้ดแต่ละแผนก</p>
+        <div class="card p-6">
+            <h2 class="font-display font-semibold text-lg mb-1" style="color:var(--ink-900);">สถานะขั้นตอนหลังการหล่อ (Post-Processing)</h2>
+            <p class="text-xs mb-6" style="color:var(--ink-500);">ระบบเปลี่ยนสถานะอัตโนมัติจากการสแกนบาร์โค้ดแต่ละแผนก</p>
 
-            <div id="stepperContainer" class="relative pl-6 space-y-8 before:absolute before:bottom-2 before:top-2 before:left-2 before:w-0.5 before:bg-gray-700">
+            <div id="stepperContainer" class="relative pl-6 space-y-8">
                 <!-- Data rendered dynamically from API -->
             </div>
 
-            <div class="mt-8 pt-4 border-t border-gray-700 flex justify-end">
-                <a href="qc-report.html" class="bg-orange-500 text-gray-900 font-bold px-5 py-2.5 rounded text-sm hover:bg-orange-400 transition shadow">
+            <div class="mt-8 pt-4 border-t flex justify-end" style="border-color:var(--paper-200);">
+                <a href="qc-report.html" class="brass-gradient text-white font-semibold px-5 py-2.5 rounded-full text-sm transition hover:brightness-105">
                     ถัดไป: ไปยังศูนย์เอกสาร QC รายงานผล ➡️
                 </a>
             </div>
         </div>
     </main>
 
+    <style>
+        #stepperContainer.relative::before{ content:""; position:absolute; top:0.5rem; bottom:0.5rem; left:0.5rem; width:2px; background:var(--paper-200); }
+    </style>
+
     <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
         async function fetchTrackingData() {
             try {
                 const res = await fetch('/api/v1/jobs/Z-2046/post-processing');
                 const data = await res.json();
-                
+
                 const container = document.getElementById('stepperContainer');
                 container.innerHTML = '';
 
@@ -48,22 +90,22 @@
                     let titleColor = '';
 
                     if(step.status === 'completed') {
-                        badge = `<div class="absolute -left-6 bg-green-500 text-gray-900 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">✓</div>`;
-                        titleColor = 'text-green-400';
+                        badge = `<div class="absolute -left-6 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold text-white" style="background:#2E7D32;">✓</div>`;
+                        titleColor = 'color:#2E7D32;';
                     } else if(step.status === 'in_progress') {
-                        badge = `<div class="absolute -left-6 bg-yellow-500 text-gray-900 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">●</div>`;
-                        titleColor = 'text-yellow-400';
+                        badge = `<div class="absolute -left-6 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold" style="background:var(--brass-500); color:#434041;">●</div>`;
+                        titleColor = 'color:var(--brass-600);';
                     } else {
-                        badge = `<div class="absolute -left-6 bg-gray-700 text-gray-400 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">${step.step_no}</div>`;
-                        titleColor = 'text-gray-500';
+                        badge = `<div class="absolute -left-6 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold" style="background:var(--paper-200); color:var(--steel-400);">${step.step_no}</div>`;
+                        titleColor = 'color:var(--steel-400);';
                     }
 
                     container.innerHTML += `
                         <div class="relative">
                             ${badge}
                             <div class="pl-2">
-                                <h4 class="text-sm font-bold ${titleColor}">${step.name}</h4>
-                                <p class="text-xs text-gray-400">${step.desc}</p>
+                                <h4 class="text-sm font-semibold" style="${titleColor}">${step.name}</h4>
+                                <p class="text-xs mt-0.5" style="color:var(--ink-500);">${step.desc}</p>
                             </div>
                         </div>
                     `;

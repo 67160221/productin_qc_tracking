@@ -5,113 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QC & Production Tracking System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: 'Sarabun', sans-serif; }</style>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Itim&family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --brass-500:#DFD187;
+            --brass-600:#D6985C;
+            --ink-900:#434041;
+            --ink-500:#69747C;
+            --paper-200:#E4E9ED;
+            --panel-dark:#434041;
+            --steel-300:#E4E9ED;
+            --steel-400:#8B96A1;
+        }
+        body{ font-family:'Itim', sans-serif; background:#EEF1F3; }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .brass-gradient{ background:linear-gradient(135deg, var(--brass-500), var(--brass-600)); }
+        .card{ background:#fff; border-radius:20px; box-shadow:0 20px 40px -24px rgba(35,42,48,0.18); }
+        .nav-pill{ padding:.5rem .9rem; border-radius:9999px; font-size:.75rem; font-weight:500; transition:.15s; }
+        .nav-pill-active{ color:#fff; }
+        .nav-pill-inactive{ color:var(--ink-500); }
+        .nav-pill-inactive:hover{ background:var(--paper-200); }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="min-h-screen">
 
-    <!-- Top Navigation -->
-    <nav class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">🏭</span>
-                <h1 class="text-xl font-bold tracking-wider text-orange-400">⚡ TRACK-PRO</h1>
-            </div>
-            <div class="flex items-center gap-6">
-                <a href="tracking.html" class="text-sm bg-gray-700 px-4 py-2 rounded-md hover:bg-gray-600 transition">➡️ ดูขั้นตอนหลังการหล่อ</a>
-                <div class="relative cursor-pointer">
-                    <span class="text-xl">🔔</span>
-                    <span id="notiBadge" class="absolute -top-1 -right-1 bg-red-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">2</span>
+    <!-- ================= SHARED NAV ================= -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b" style="border-color:var(--paper-200);">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-4 md:px-6 py-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg brass-gradient flex items-center justify-center shrink-0">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="2"/></svg>
                 </div>
+                <span class="font-display font-semibold text-sm" style="color:var(--ink-900)">TRACK&#8209;PRO</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="nav-pill nav-pill-active brass-gradient">แดชบอร์ด</span>
+                <a href="tracking.html" class="nav-pill nav-pill-inactive">Post&#8209;Processing</a>
+                <a href="qc-report.html" class="nav-pill nav-pill-inactive">QC Report</a>
+                <div class="relative cursor-pointer px-2">
+                    <span class="text-lg">🔔</span>
+                    <span id="notiBadge" class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">2</span>
+                </div>
+                <button onclick="logout()" class="nav-pill border" style="color:var(--ink-500); border-color:var(--paper-200);">ออกจากระบบ</button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-        
+    <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+
         <!-- Edge Cases Controller -->
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-            <h3 class="text-xs font-semibold uppercase text-gray-400 mb-3 tracking-wider">🎛️ แผงควบคุมจำลองสถานการณ์ (Edge Cases)</h3>
-            <div class="flex flex-wrap gap-3">
-                <button onclick="triggerEdgeCase('normal')" class="bg-green-600/20 text-green-400 border border-green-500/30 px-3 py-1.5 rounded text-xs font-medium hover:bg-green-600/30">สถานะปกติ (Normal)</button>
-                <button onclick="triggerEdgeCase('iot_loss')" class="bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 px-3 py-1.5 rounded text-xs font-medium hover:bg-yellow-600/30">เน็ตหลุด (IoT Offline)</button>
-                <button onclick="triggerEdgeCase('breakdown')" class="bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded text-xs font-medium hover:bg-red-600/30">เครื่องจักรพัง (Breakdown)</button>
-                <button onclick="triggerEdgeCase('high_defect')" class="bg-purple-600/20 text-purple-400 border border-purple-500/30 px-3 py-1.5 rounded text-xs font-medium hover:bg-purple-600/30">ของเสียวิกฤต (Defect Warning)</button>
+        <div class="card p-4">
+            <h3 class="font-mono text-[10px] font-medium tracking-[0.1em] uppercase mb-3" style="color:var(--ink-500)">🎛️ แผงควบคุมจำลองสถานการณ์ (Edge Cases)</h3>
+            <div class="flex flex-wrap gap-2.5">
+                <button onclick="triggerEdgeCase('normal')" class="px-3 py-1.5 rounded-full text-xs font-medium transition" style="background:#E8F3EA; color:#2E7D32;">สถานะปกติ (Normal)</button>
+                <button onclick="triggerEdgeCase('iot_loss')" class="px-3 py-1.5 rounded-full text-xs font-medium transition" style="background:#FBF1DC; color:#95700F;">เน็ตหลุด (IoT Offline)</button>
+                <button onclick="triggerEdgeCase('breakdown')" class="px-3 py-1.5 rounded-full text-xs font-medium transition" style="background:#FBE7E5; color:#B3261E;">เครื่องจักรพัง (Breakdown)</button>
+                <button onclick="triggerEdgeCase('high_defect')" class="px-3 py-1.5 rounded-full text-xs font-medium transition" style="background:#EFE7F6; color:#6A3EA1;">ของเสียวิกฤต (Defect Warning)</button>
             </div>
         </div>
 
         <!-- 1. Production Timeline -->
-        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+        <div class="card p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2 text-orange-400">📅 แผนการผลิตและกำหนดส่งมอบ (Timeline)</h2>
-                <span id="systemStatus" class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30">● กำลังดำเนินการผลิต</span>
+                <h2 class="font-display font-semibold text-lg" style="color:var(--ink-900)">📅 แผนการผลิตและกำหนดส่งมอบ (Timeline)</h2>
+                <span id="systemStatus" class="px-3 py-1 rounded-full text-xs font-semibold" style="background:#E8F3EA; color:#2E7D32;">● กำลังดำเนินการผลิต</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-900 p-4 rounded-lg">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-2xl" style="background:#F7F5F1;">
                 <div>
-                    <span class="text-xs text-gray-400">ชื่องาน (Job Order)</span>
-                    <p id="jobNameText" class="font-semibold text-sm text-gray-200">Die-Casting Part #Z-2046</p>
+                    <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-500)">ชื่องาน (Job Order)</span>
+                    <p id="jobNameText" class="font-semibold text-sm mt-1" style="color:var(--ink-900)">Die-Casting Part #Z-2046</p>
                 </div>
                 <div>
-                    <span class="text-xs text-gray-400">วันเริ่มแผนงาน (Kick-off)</span>
-                    <p id="kickoffText" class="font-semibold text-sm text-gray-200">18 กรกฎาคม 2026</p>
+                    <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-500)">วันเริ่มแผนงาน (Kick-off)</span>
+                    <p id="kickoffText" class="font-semibold text-sm mt-1" style="color:var(--ink-900)">18 กรกฎาคม 2026</p>
                 </div>
                 <div>
-                    <span class="text-xs text-gray-400">วันคาดการณ์แล้วเสร็จ (ETA)</span>
-                    <p id="etaText" class="font-semibold text-sm text-green-400">22 กรกฎาคม 2026 (ตามกำหนดเดิม)</p>
+                    <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-500)">วันคาดการณ์แล้วเสร็จ (ETA)</span>
+                    <p id="etaText" class="font-semibold text-sm mt-1" style="color:#2E7D32;">22 กรกฎาคม 2026 (ตามกำหนดเดิม)</p>
                 </div>
             </div>
         </div>
 
         <!-- 2. Real-time Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col justify-between">
+            <div class="card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-3">
-                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">📦 ยอดรวมชิ้นงานที่ฉีดได้ (Shot Count)</span>
-                        <span class="text-xs text-blue-400 font-mono">Target: 5,000</span>
+                        <span class="font-mono text-[10px] font-medium tracking-[0.1em] uppercase" style="color:var(--ink-500)">📦 ยอดรวมชิ้นงานที่ฉีดได้</span>
+                        <span class="font-mono text-[10px]" style="color:var(--brass-600);">Target: 5,000</span>
                     </div>
-                    <div class="text-4xl font-extrabold text-white font-mono my-2" id="shotCountText">1,240</div>
+                    <div class="font-mono text-4xl font-bold my-2" id="shotCountText" style="color:var(--ink-900);">1,240</div>
                 </div>
                 <div class="mt-4">
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-gray-400">ความคืบหน้าการหล่อ</span>
-                        <span id="progressPercent" class="font-bold text-orange-400">24.8%</span>
+                    <div class="flex justify-between text-xs mb-1.5">
+                        <span style="color:var(--ink-500);">ความคืบหน้าการหล่อ</span>
+                        <span id="progressPercent" class="font-bold" style="color:var(--brass-600);">24.8%</span>
                     </div>
-                    <div class="w-full bg-gray-900 rounded-full h-2.5 overflow-hidden">
-                        <div id="progressBar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-2.5 transition-all duration-500" style="width: 24.8%"></div>
+                    <div class="w-full rounded-full h-2 overflow-hidden" style="background:var(--paper-200);">
+                        <div id="progressBar" class="brass-gradient h-2 transition-all duration-500" style="width: 24.8%"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-3">📈 เปอร์เซ็นต์งานดี (Yield Rate)</span>
+            <div class="card p-6">
+                <span class="font-mono text-[10px] font-medium tracking-[0.1em] uppercase block mb-3" style="color:var(--ink-500)">📈 เปอร์เซ็นต์งานดี (Yield Rate)</span>
                 <div class="flex items-center gap-6">
                     <div class="relative w-20 h-20 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                            <path class="text-gray-900" stroke-width="4" stroke="currentColor" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <path id="yieldCircle" class="text-green-500 transition-all duration-500" stroke-dasharray="96, 100" stroke-width="4" stroke-linecap="round" stroke="currentColor" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path stroke-width="4" stroke="var(--paper-200)" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="yieldCircle" stroke-dasharray="96, 100" stroke-width="4" stroke-linecap="round" stroke="#2E7D32" fill="transparent" class="transition-all duration-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         </svg>
-                        <div class="absolute text-sm font-bold font-mono" id="yieldText">96.2%</div>
+                        <div class="absolute font-mono text-sm font-bold" id="yieldText" style="color:var(--ink-900);">96.2%</div>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-400">มาตรฐานควบคุมเกณฑ์สูงสุดต้องไม่ต่ำกว่า <span class="text-red-400 font-bold">95.0%</span></p>
+                        <p class="text-xs" style="color:var(--ink-500);">มาตรฐานควบคุมเกณฑ์สูงสุดต้องไม่ต่ำกว่า <span class="font-bold" style="color:#B3261E;">95.0%</span></p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col justify-between" id="defectPanel">
+            <div class="card p-6 flex flex-col justify-between" id="defectPanel">
                 <div>
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">🚨 บันทึกสถานะฝั่งควบคุมคุณภาพ</span>
+                    <span class="font-mono text-[10px] font-medium tracking-[0.1em] uppercase block mb-2" style="color:var(--ink-500)">🚨 บันทึกสถานะฝั่งควบคุมคุณภาพ</span>
                     <div class="flex items-start gap-3 mt-1">
-                        <span id="defectStatusIcon" class="text-2xl text-green-400">✔️</span>
+                        <span id="defectStatusIcon" class="text-2xl">✔️</span>
                         <div>
-                            <h4 id="defectTitle" class="font-bold text-sm text-gray-100">พารามิเตอร์ปกติ</h4>
-                            <p id="defectDesc" class="text-xs text-gray-400 mt-0.5">อัตราการเกิดฟองอากาศ (Porosity) อยู่ในเกณฑ์ที่ยอมรับได้</p>
+                            <h4 id="defectTitle" class="font-semibold text-sm" style="color:var(--ink-900);">พารามิเตอร์ปกติ</h4>
+                            <p id="defectDesc" class="text-xs mt-0.5" style="color:var(--ink-500);">อัตราการเกิดฟองอากาศ (Porosity) อยู่ในเกณฑ์ที่ยอมรับได้</p>
                         </div>
                     </div>
                 </div>
-                <div id="actionStatus" class="text-xs text-gray-500 mt-4 border-t border-gray-700/60 pt-2 italic">
+                <div id="actionStatus" class="text-xs mt-4 pt-2 border-t italic" style="color:var(--steel-400); border-color:var(--paper-200);">
                     อัปเดตระบบอัตโนมัติจากเซ็นเซอร์โรงงานล่าสุดเมื่อสักครู่
                 </div>
             </div>
@@ -119,19 +143,29 @@
     </main>
 
     <!-- Concession Modal -->
-    <div id="concessionModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
-        <div class="bg-gray-800 max-w-md w-full rounded-xl p-6 border border-red-500/40 shadow-2xl">
-            <div class="text-red-500 text-3xl mb-2">⚠️ QUALITY CRITICAL ALERT</div>
-            <h3 class="text-lg font-bold text-white mb-2">ระบบระงับสายการผลิตชั่วคราวเนื่องจากพบรอยร้าว!</h3>
-            <p class="text-xs text-gray-400 mb-4">QC สุ่มตรวจพบชิ้นงานมี Defect รอยร้าวเกินเกณฑ์ Master Spec:</p>
+    <div id="concessionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl" style="border:1px solid #F5C6C2;">
+            <div class="text-2xl mb-2" style="color:#B3261E;">⚠️ QUALITY CRITICAL ALERT</div>
+            <h3 class="font-display font-semibold text-lg mb-2" style="color:var(--ink-900);">ระบบระงับสายการผลิตชั่วคราวเนื่องจากพบรอยร้าว!</h3>
+            <p class="text-xs mb-4" style="color:var(--ink-500);">QC สุ่มตรวจพบชิ้นงานมี Defect รอยร้าวเกินเกณฑ์ Master Spec:</p>
             <div class="space-y-2">
-                <button onclick="closeModal('ขออนุมัติสั่งผลิตซ่อมใหม่ (Rework)')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded text-sm transition">🛠️ สั่งให้หยุดและผลิตซ่อมใหม่ทั้งหมด (Rework)</button>
-                <button onclick="closeModal('ลูกค้ายืนยันอนุมัติยอมรับสภาพคลาดเคลื่อน (Accept with deviation)')" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 px-4 rounded text-sm transition">🤝 ยอมรับสภาพความคลาดเคลื่อนชั่วคราว (Accept with deviation)</button>
+                <button onclick="closeModal('ขออนุมัติสั่งผลิตซ่อมใหม่ (Rework)')" class="w-full text-white font-semibold py-2.5 px-4 rounded-full text-sm transition" style="background:#B3261E;">🛠️ สั่งให้หยุดและผลิตซ่อมใหม่ทั้งหมด (Rework)</button>
+                <button onclick="closeModal('ลูกค้ายืนยันอนุมัติยอมรับสภาพคลาดเคลื่อน (Accept with deviation)')" class="w-full py-2.5 px-4 rounded-full text-sm font-medium border transition" style="color:var(--ink-900); border-color:var(--paper-200);">🤝 ยอมรับสภาพความคลาดเคลื่อนชั่วคราว (Accept with deviation)</button>
             </div>
         </div>
     </div>
 
     <script>
+        // ตรวจสอบว่าล็อกอินแล้วหรือยัง — ถ้าไม่มี token ให้เด้งกลับไปหน้า login
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
         const API_BASE = '/api/v1/jobs/Z-2046';
 
         async function fetchDashboard() {
@@ -146,16 +180,19 @@
                 document.getElementById('progressPercent').innerText = data.progress_percent + "%";
                 document.getElementById('progressBar').style.width = data.progress_percent + "%";
                 document.getElementById('yieldText').innerText = data.yield_rate + "%";
-                
+
                 const status = document.getElementById('systemStatus');
                 status.innerText = "● " + data.status;
-                
+
                 if(data.status === "OFFLINE") {
-                    status.className = "bg-gray-600 text-gray-300 px-3 py-1 rounded-full text-xs font-bold";
+                    status.className = "px-3 py-1 rounded-full text-xs font-semibold";
+                    status.style.background = "#E7E7E7"; status.style.color = "#5F5F5F";
                 } else if(data.status.includes("Paused")) {
-                    status.className = "bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30";
+                    status.className = "px-3 py-1 rounded-full text-xs font-semibold";
+                    status.style.background = "#FBE7E5"; status.style.color = "#B3261E";
                 } else {
-                    status.className = "bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-500/30";
+                    status.className = "px-3 py-1 rounded-full text-xs font-semibold";
+                    status.style.background = "#E8F3EA"; status.style.color = "#2E7D32";
                 }
 
                 if(data.defect_status) {
