@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QC Document Center & Logistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --ink-900:#152026; --ink-600:#42525C; --ink-400:#7C8A93;
+            --surface:#F1F4F6; --line:#E1E6EA;
+            --teal-600:#0D9488; --teal-700:#0B7A70; --teal-50:#E7F5F3;
+        }
+        body{ font-family:'Sarabun', sans-serif; background:var(--surface); color:var(--ink-900); }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .card{ background:#fff; border-radius:14px; border:1px solid var(--line); }
+        .tab{ padding:.9rem .25rem; font-size:.8rem; font-weight:500; border-bottom:2px solid transparent; color:var(--ink-400); }
+        .tab-active{ color:var(--ink-900); border-color:var(--teal-600); font-weight:600; }
+        table td, table th{ padding:.45rem .55rem; }
+        table tbody tr:nth-child(even){ background:var(--surface); }
+        #toast{ transition: opacity .25s, transform .25s; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="sticky top-0 z-50 bg-white border-b" style="border-color:var(--line);">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-5">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 py-3.5">
+                    <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:var(--ink-900);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="2"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm">TRACK&#8209;PRO</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="dashboard.html" class="tab hover:text-[var(--ink-600)]">แดชบอร์ด</a>
+                    <a href="tracking.html" class="tab hover:text-[var(--ink-600)]">Post&#8209;Processing</a>
+                    <span class="tab tab-active">QC Report</span>
+                </div>
+            </div>
+            <button onclick="logout()" class="text-xs font-medium" style="color:var(--ink-400);">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-5 py-6">
+        <div class="mb-5">
+            <h1 class="font-display font-semibold text-xl">เอกสาร QC และการจัดส่ง</h1>
+            <p class="font-mono text-[11px] mt-0.5" style="color:var(--ink-400);">JOB #Z&#8209;2046</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+
+            <!-- QC report: wider column -->
+            <div class="md:col-span-7 card p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-display font-semibold text-base mb-1">ตรวจสอบคุณภาพเอกสาร (QC Inspection)</h3>
+                    <p class="text-xs mb-4" style="color:var(--ink-400);">รายงานผลการตรวจสอบขนาดชิ้นงานดิจิทัลที่ผ่านการอนุมัติรับรอง</p>
+
+                    <div class="rounded-lg overflow-hidden" style="border:1px solid var(--line);">
+                        <div class="px-4 py-3" style="background:var(--surface);">
+                            <div class="flex justify-between font-mono text-[11px]" style="color:var(--ink-600);">
+                                <span id="reportNo">Report No: -</span>
+                                <span id="reportDate">Date: -</span>
+                            </div>
+                        </div>
+                        <div class="px-4 py-3 space-y-1 text-xs border-b" style="border-color:var(--line);">
+                            <div><span style="color:var(--ink-400);">Product Part</span> &nbsp;<span id="productPart" class="font-medium">-</span></div>
+                            <div><span style="color:var(--ink-400);">Sampling Method</span> &nbsp;<span id="samplingMethod" class="font-medium">-</span></div>
+                        </div>
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead>
+                                <tr style="color:var(--ink-400); border-bottom:1px solid var(--line);">
+                                    <th>Item</th><th>Spec (mm)</th><th>Actual</th><th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qcTableBody"></tbody>
+                        </table>
+                        <div class="px-4 py-3 text-right border-t" style="border-color:var(--line);">
+                            <p class="text-[11px] italic" style="color:var(--ink-400);">Digitally Signed By</p>
+                            <p id="auditorText" class="font-bold text-xs">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button onclick="showPrint()" class="py-2.5 rounded-lg text-xs font-medium border transition" style="border-color:var(--line);">🖨️ สั่งพิมพ์เอกสาร</button>
+                    <button onclick="showDownload()" class="text-white py-2.5 rounded-lg text-xs font-semibold transition" style="background:var(--teal-600);">📥 ดาวน์โหลด PDF</button>
+                </div>
+            </div>
+
+            <!-- Logistics: narrower column -->
+            <div class="md:col-span-5 card p-6 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-display font-semibold text-base mb-1">เตรียมจัดส่งและลอจิสติกส์</h3>
+                    <p class="text-xs mb-4" style="color:var(--ink-400);">รายละเอียดใบนำส่งสินค้าและยานพาหนะขนส่งสินค้า</p>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between border-b pb-2.5" style="border-color:var(--line);">
+                            <span style="color:var(--ink-400);">เลขที่ใบส่งของ</span>
+                            <span id="deliveryNote" class="font-bold font-mono">-</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2.5" style="border-color:var(--line);">
+                            <span style="color:var(--ink-400);">จำนวนแพ็คเกจบรรจุ</span>
+                            <span id="packageInfo" class="font-bold">-</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2.5" style="border-color:var(--line);">
+                            <span style="color:var(--ink-400);">พิกัดโรงงานปลายทาง</span>
+                            <span id="destination" class="font-bold text-right">-</span>
+                        </div>
+                        <div class="pt-1">
+                            <span class="block mb-1.5" style="color:var(--ink-400);">ตำแหน่งพาหนะจัดส่ง</span>
+                            <div class="p-3 rounded-lg flex items-center justify-between" style="background:var(--teal-50);">
+                                <div>
+                                    <p id="vehiclePlate" class="font-bold" style="color:var(--teal-700);">🚚 ทะเบียนรถ: -</p>
+                                    <p id="driverStatus" class="text-[10px] mt-0.5" style="color:var(--ink-600);">สถานะ: -</p>
+                                </div>
+                                <a id="gpsUrl" href="#" target="_blank" class="text-[10px] px-2.5 py-1.5 rounded-md font-bold text-white transition" style="background:var(--teal-600);">
+                                    📍 GPS
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="dashboard.html" class="block w-full text-center mt-6 py-2.5 rounded-lg text-xs font-semibold border transition" style="border-color:var(--line);">
+                    ← กลับไปแดชบอร์ดหลัก
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-lg text-xs font-medium text-white opacity-0 pointer-events-none z-50" style="background:var(--ink-900);"></div>
+
+    <script>
+        if (!localStorage.getItem('token')) { window.location.href = 'login.html'; }
+        function logout() {
+            localStorage.removeItem('token'); localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            t.style.transform = 'translate(-50%, -6px)';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translate(-50%, 0)';
+            }, 2200);
+        }
+        function showPrint() { showToast('กำลังเปิดหน้าต่างเตรียมพิมพ์รายงาน...'); }
+        function showDownload() { showToast('กำลังดาวน์โหลดไฟล์ QC_Report.pdf...'); }
+
+        async function fetchQCData() {
+            try {
+                const [qcRes, logRes] = await Promise.all([
+                    fetch('/api/v1/jobs/Z-2046/qc-report'),
+                    fetch('/api/v1/jobs/Z-2046/logistics')
+                ]);
+                const qc = await qcRes.json();
+                const log = await logRes.json();
+
+                document.getElementById('reportNo').innerText = `Report No: #${qc.report_no}`;
+                document.getElementById('reportDate').innerText = `Date: ${qc.inspection_date}`;
+                document.getElementById('productPart').innerText = qc.product_part;
+                document.getElementById('samplingMethod').innerText = qc.sampling_method;
+                document.getElementById('auditorText').innerText = qc.auditor;
+
+                const tbody = document.getElementById('qcTableBody');
+                tbody.innerHTML = '';
+                qc.results.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${row.item}</td><td>${row.spec}</td><td>${row.actual}</td>
+                            <td class="font-bold" style="color:var(--teal-700);">${row.result}</td>
+                        </tr>`;
+                });
+
+                document.getElementById('deliveryNote').innerText = log.delivery_note;
+                document.getElementById('packageInfo').innerText = log.package_info;
+                document.getElementById('destination').innerText = log.destination;
+                document.getElementById('vehiclePlate').innerText = `🚚 ทะเบียนรถ: ${log.vehicle_plate}`;
+                document.getElementById('driverStatus').innerText = `สถานะพนักงาน: ${log.driver_status}`;
+                document.getElementById('gpsUrl').href = log.gps_url;
+            } catch (err) { console.error("QC/Logistics Fetch Error:", err); }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchQCData);
+    </script>
+</body>
+</html>

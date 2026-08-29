@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QC & Production Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --ink-900:#152026; --ink-600:#42525C; --ink-400:#7C8A93;
+            --surface:#F1F4F6; --line:#E1E6EA;
+            --teal-600:#0D9488; --teal-700:#0B7A70; --teal-50:#E7F5F3;
+            --amber-700:#B45309; --amber-50:#FCF1E3;
+            --red-600:#DC2626; --red-50:#FCEAEA;
+            --slate-500:#64748B; --slate-50:#EEF1F3;
+        }
+        body{ font-family:'Sarabun', sans-serif; background:var(--surface); color:var(--ink-900); }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .card{ background:#fff; border-radius:14px; border:1px solid var(--line); }
+        .tab{ padding:.9rem .25rem; font-size:.8rem; font-weight:500; border-bottom:2px solid transparent; color:var(--ink-400); }
+        .tab-active{ color:var(--ink-900); border-color:var(--teal-600); font-weight:600; }
+        .seg-btn{ padding:.4rem .85rem; border-radius:7px; font-size:.72rem; font-weight:500; border:1px solid transparent; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- ================= NAV ================= -->
+    <nav class="sticky top-0 z-50 bg-white border-b" style="border-color:var(--line);">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-5">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 py-3.5">
+                    <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:var(--ink-900);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="2"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm">TRACK&#8209;PRO</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <span class="tab tab-active">แดชบอร์ด</span>
+                    <a href="tracking.html" class="tab hover:text-[var(--ink-600)]">Post&#8209;Processing</a>
+                    <a href="qc-report.html" class="tab hover:text-[var(--ink-600)]">QC Report</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative cursor-pointer">
+                    <span class="text-lg">🔔</span>
+                    <span id="notiBadge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">2</span>
+                </div>
+                <button onclick="logout()" class="text-xs font-medium" style="color:var(--ink-400);">ออกจากระบบ</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-5 py-6 space-y-5">
+
+        <!-- Page header -->
+        <div class="flex items-end justify-between">
+            <div>
+                <h1 class="font-display font-semibold text-xl">แดชบอร์ดการผลิต</h1>
+                <p class="font-mono text-[11px] mt-0.5" style="color:var(--ink-400);">JOB #Z&#8209;2046 &middot; DIE&#8209;CASTING ZINC ALLOY</p>
+            </div>
+            <span id="systemStatus" class="px-3 py-1.5 rounded-full text-xs font-semibold" style="background:var(--teal-50); color:var(--teal-700);">● กำลังดำเนินการผลิต</span>
+        </div>
+
+        <!-- Edge case segmented control -->
+        <div class="card p-3.5">
+            <p class="font-mono text-[10px] tracking-wide uppercase mb-2.5" style="color:var(--ink-400);">จำลองสถานการณ์ (Edge Case Simulator)</p>
+            <div class="flex flex-wrap gap-1.5 p-1 rounded-lg inline-flex" style="background:var(--surface);">
+                <button onclick="triggerEdgeCase('normal')" class="seg-btn" style="background:#fff; color:var(--teal-700); box-shadow:0 1px 2px rgba(0,0,0,.06);">ปกติ</button>
+                <button onclick="triggerEdgeCase('iot_loss')" class="seg-btn" style="color:var(--slate-500);">IoT หลุด</button>
+                <button onclick="triggerEdgeCase('breakdown')" class="seg-btn" style="color:var(--red-600);">เครื่องพัง</button>
+                <button onclick="triggerEdgeCase('high_defect')" class="seg-btn" style="color:var(--amber-700);">ของเสียวิกฤต</button>
+            </div>
+        </div>
+
+        <!-- Asymmetric hero grid: 7 / 5 split -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+            <!-- Hero: job + shot progress (7 cols) -->
+            <div class="lg:col-span-7 card p-6">
+                <div class="flex flex-wrap gap-x-8 gap-y-3 pb-5 mb-5 border-b" style="border-color:var(--line);">
+                    <div>
+                        <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-400);">ชื่องาน</span>
+                        <p id="jobNameText" class="font-semibold text-sm mt-0.5">Die-Casting Part #Z-2046</p>
+                    </div>
+                    <div>
+                        <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-400);">Kick&#8209;off</span>
+                        <p id="kickoffText" class="font-semibold text-sm mt-0.5">18 กรกฎาคม 2026</p>
+                    </div>
+                    <div>
+                        <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-400);">ETA</span>
+                        <p id="etaText" class="font-semibold text-sm mt-0.5" style="color:var(--teal-700);">22 กรกฎาคม 2026</p>
+                    </div>
+                </div>
+
+                <div class="flex items-baseline justify-between mb-1">
+                    <span class="font-mono text-[10px] tracking-wide uppercase" style="color:var(--ink-400);">ยอดชิ้นงานที่ฉีดได้</span>
+                    <span class="font-mono text-[10px]" style="color:var(--ink-400);">TARGET 5,000</span>
+                </div>
+                <div class="flex items-end gap-3 mb-3">
+                    <span id="shotCountText" class="font-mono font-bold text-5xl leading-none">1,240</span>
+                    <span id="progressPercent" class="font-mono text-sm font-semibold mb-1" style="color:var(--teal-700);">24.8%</span>
+                </div>
+                <div class="w-full rounded-full h-2 overflow-hidden" style="background:var(--surface);">
+                    <div id="progressBar" class="h-2 transition-all duration-500 rounded-full" style="background:var(--teal-600); width: 24.8%"></div>
+                </div>
+            </div>
+
+            <!-- Side: yield + defect (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-5">
+
+                <div class="card p-5 flex items-center gap-5">
+                    <div class="relative w-16 h-16 flex items-center justify-center shrink-0">
+                        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path stroke-width="4" stroke="var(--surface)" fill="transparent" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="yieldCircle" stroke-dasharray="96, 100" stroke-width="4" stroke-linecap="round" stroke="var(--teal-600)" fill="transparent" class="transition-all duration-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute font-mono text-xs font-bold" id="yieldText">96.2%</div>
+                    </div>
+                    <div>
+                        <span class="font-mono text-[10px] tracking-wide uppercase block mb-1" style="color:var(--ink-400);">Yield Rate</span>
+                        <p class="text-xs" style="color:var(--ink-600);">เกณฑ์ควบคุมต้องไม่ต่ำกว่า <span class="font-bold" style="color:var(--red-600);">95.0%</span></p>
+                    </div>
+                </div>
+
+                <div class="card p-5 flex-1" id="defectPanel">
+                    <span class="font-mono text-[10px] tracking-wide uppercase block mb-2" style="color:var(--ink-400);">สถานะควบคุมคุณภาพ</span>
+                    <div class="flex items-start gap-3">
+                        <span id="defectStatusIcon" class="text-xl">✔️</span>
+                        <div>
+                            <h4 id="defectTitle" class="font-semibold text-sm">พารามิเตอร์ปกติ</h4>
+                            <p id="defectDesc" class="text-xs mt-0.5" style="color:var(--ink-600);">อัตราการเกิดฟองอากาศ (Porosity) อยู่ในเกณฑ์ที่ยอมรับได้</p>
+                        </div>
+                    </div>
+                    <div id="actionStatus" class="font-mono text-[10px] mt-4 pt-3 border-t" style="color:var(--ink-400); border-color:var(--line);">
+                        อัปเดตล่าสุดเมื่อสักครู่
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Concession Modal -->
+    <div id="concessionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white max-w-md w-full rounded-xl p-6 shadow-2xl border-l-4" style="border-color:var(--red-600);">
+            <div class="text-xs font-mono font-bold tracking-wide mb-2" style="color:var(--red-600);">⚠ QUALITY CRITICAL ALERT</div>
+            <h3 class="font-display font-semibold text-lg mb-2">ระบบระงับสายการผลิตชั่วคราวเนื่องจากพบรอยร้าว!</h3>
+            <p class="text-xs mb-4" style="color:var(--ink-600);">QC สุ่มตรวจพบชิ้นงานมี Defect รอยร้าวเกินเกณฑ์ Master Spec:</p>
+            <div class="space-y-2">
+                <button onclick="closeModal('ขออนุมัติสั่งผลิตซ่อมใหม่ (Rework)')" class="w-full text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition" style="background:var(--red-600);">สั่งให้หยุดและผลิตซ่อมใหม่ทั้งหมด (Rework)</button>
+                <button onclick="closeModal('ลูกค้ายืนยันอนุมัติยอมรับสภาพคลาดเคลื่อน (Accept with deviation)')" class="w-full py-2.5 px-4 rounded-lg text-sm font-medium border transition" style="border-color:var(--line);">ยอมรับสภาพความคลาดเคลื่อนชั่วคราว (Accept with deviation)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (!localStorage.getItem('token')) { window.location.href = 'login.html'; }
+        function logout() {
+            localStorage.removeItem('token'); localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        const API_BASE = '/api/v1/jobs/Z-2046';
+
+        async function fetchDashboard() {
+            try {
+                const res = await fetch(`${API_BASE}/dashboard`);
+                const data = await res.json();
+
+                document.getElementById('jobNameText').innerText = data.job_name;
+                document.getElementById('kickoffText').innerText = data.kickoff_date;
+                document.getElementById('etaText').innerText = data.eta_text;
+                document.getElementById('shotCountText').innerText = data.current_shots.toLocaleString();
+                document.getElementById('progressPercent').innerText = data.progress_percent + "%";
+                document.getElementById('progressBar').style.width = data.progress_percent + "%";
+                document.getElementById('yieldText').innerText = data.yield_rate + "%";
+
+                const status = document.getElementById('systemStatus');
+                status.innerText = "● " + data.status;
+                status.className = "px-3 py-1.5 rounded-full text-xs font-semibold";
+                if(data.status === "OFFLINE") {
+                    status.style.background = "var(--slate-50)"; status.style.color = "var(--slate-500)";
+                } else if(data.status.includes("Paused")) {
+                    status.style.background = "var(--red-50)"; status.style.color = "var(--red-600)";
+                } else {
+                    status.style.background = "var(--teal-50)"; status.style.color = "var(--teal-700)";
+                }
+
+                if(data.defect_status) {
+                    document.getElementById('defectStatusIcon').innerText = data.defect_status.icon;
+                    document.getElementById('defectTitle').innerText = data.defect_status.title;
+                    document.getElementById('defectDesc').innerText = data.defect_status.desc;
+                }
+            } catch (err) { console.error("Dashboard Fetch Error:", err); }
+        }
+
+        async function triggerEdgeCase(type) {
+            if (type === 'high_defect') {
+                document.getElementById('concessionModal').style.display = 'flex';
+                return;
+            }
+            try {
+                await fetch(`${API_BASE}/edge-case`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_type: type })
+                });
+                fetchDashboard();
+            } catch (err) { console.error("Edge Case Error:", err); }
+        }
+
+        async function closeModal(actionSelected) {
+            document.getElementById('concessionModal').style.display = 'none';
+            try {
+                await fetch(`${API_BASE}/concession`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action_selected: actionSelected })
+                });
+                fetchDashboard();
+            } catch (err) { console.error("Concession Error:", err); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDashboard();
+            setInterval(fetchDashboard, 3000);
+        });
+    </script>
+</body>
+</html>

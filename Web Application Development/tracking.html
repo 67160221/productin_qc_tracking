@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Processing Status (แผนกหลังการหล่อ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --ink-900:#152026; --ink-600:#42525C; --ink-400:#7C8A93;
+            --surface:#F1F4F6; --line:#E1E6EA;
+            --teal-600:#0D9488; --teal-700:#0B7A70; --teal-50:#E7F5F3;
+        }
+        body{ font-family:'Sarabun', sans-serif; background:var(--surface); color:var(--ink-900); }
+        .font-display{ font-family:'Space Grotesk', sans-serif; }
+        .font-mono{ font-family:'JetBrains Mono', monospace; }
+        .card{ background:#fff; border-radius:14px; border:1px solid var(--line); }
+        .tab{ padding:.9rem .25rem; font-size:.8rem; font-weight:500; border-bottom:2px solid transparent; color:var(--ink-400); }
+        .tab-active{ color:var(--ink-900); border-color:var(--teal-600); font-weight:600; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="sticky top-0 z-50 bg-white border-b" style="border-color:var(--line);">
+        <div class="max-w-6xl mx-auto flex items-center justify-between px-5">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 py-3.5">
+                    <div class="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style="background:var(--ink-900);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 20V9l8-5 8 5v11" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="#fff" stroke-width="2"/></svg>
+                    </div>
+                    <span class="font-display font-semibold text-sm">TRACK&#8209;PRO</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="dashboard.html" class="tab hover:text-[var(--ink-600)]">แดชบอร์ด</a>
+                    <span class="tab tab-active">Post&#8209;Processing</span>
+                    <a href="qc-report.html" class="tab hover:text-[var(--ink-600)]">QC Report</a>
+                </div>
+            </div>
+            <button onclick="logout()" class="text-xs font-medium" style="color:var(--ink-400);">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <main class="max-w-2xl mx-auto px-5 py-6">
+        <div class="mb-5">
+            <h1 class="font-display font-semibold text-xl">สถานะขั้นตอนหลังการหล่อ</h1>
+            <p class="font-mono text-[11px] mt-0.5" style="color:var(--ink-400);">JOB #Z&#8209;2046 &middot; อัปเดตอัตโนมัติจากการสแกนบาร์โค้ด</p>
+        </div>
+
+        <!-- current-step summary strip -->
+        <div id="currentStepStrip" class="card p-4 mb-5 flex items-center gap-3" style="background:var(--teal-50); border-color:transparent;">
+            <span class="w-2 h-2 rounded-full shrink-0" style="background:var(--teal-600);"></span>
+            <p class="text-xs font-medium" style="color:var(--teal-700);">กำลังโหลดสถานะล่าสุด...</p>
+        </div>
+
+        <div class="card p-6">
+            <div id="stepperContainer" class="relative pl-7 space-y-7">
+                <!-- Data rendered dynamically from API -->
+            </div>
+
+            <div class="mt-7 pt-5 border-t flex justify-end" style="border-color:var(--line);">
+                <a href="qc-report.html" class="text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition" style="background:var(--teal-600);">
+                    ถัดไป: ศูนย์เอกสาร QC รายงานผล →
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        if (!localStorage.getItem('token')) { window.location.href = 'login.html'; }
+        function logout() {
+            localStorage.removeItem('token'); localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        async function fetchTrackingData() {
+            try {
+                const res = await fetch('/api/v1/jobs/Z-2046/post-processing');
+                const data = await res.json();
+
+                const container = document.getElementById('stepperContainer');
+                container.innerHTML = '';
+                container.style.borderLeft = '2px solid var(--line)';
+                container.style.marginLeft = '3px';
+
+                const current = data.steps.find(s => s.status === 'in_progress');
+                const strip = document.getElementById('currentStepStrip');
+                if (current) {
+                    strip.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0 animate-pulse" style="background:var(--teal-600);"></span>
+                        <p class="text-xs font-medium" style="color:var(--teal-700);">กำลังดำเนินการ: ${current.name}</p>`;
+                } else {
+                    strip.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0" style="background:var(--ink-400);"></span>
+                        <p class="text-xs font-medium" style="color:var(--ink-600);">ไม่มีขั้นตอนที่กำลังดำเนินการอยู่ในขณะนี้</p>`;
+                }
+
+                data.steps.forEach(step => {
+                    let badge = '';
+                    let titleColor = 'var(--ink-400)';
+
+                    if (step.status === 'completed') {
+                        badge = `<div class="absolute -left-[31px] rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold text-white" style="background:var(--teal-600);">✓</div>`;
+                        titleColor = 'var(--teal-700)';
+                    } else if (step.status === 'in_progress') {
+                        badge = `<div class="absolute -left-[31px] rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold text-white ring-4" style="background:var(--teal-600); box-shadow:0 0 0 4px var(--teal-50);">●</div>`;
+                        titleColor = 'var(--ink-900)';
+                    } else {
+                        badge = `<div class="absolute -left-[31px] rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" style="background:var(--surface); color:var(--ink-400); border:1px solid var(--line);">${step.step_no}</div>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="relative">
+                            ${badge}
+                            <h4 class="text-sm font-semibold" style="color:${titleColor};">${step.name}</h4>
+                            <p class="text-xs mt-0.5" style="color:var(--ink-600);">${step.desc}</p>
+                        </div>
+                    `;
+                });
+            } catch (err) { console.error("Tracking Fetch Error:", err); }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchTrackingData);
+    </script>
+</body>
+</html>
